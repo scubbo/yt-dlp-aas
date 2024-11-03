@@ -35,7 +35,6 @@ steps:
       tags:
         - ${DRONE_BRANCH}
         - ${DRONE_COMMIT_SHA:0:10}
-      target: prod
       platforms:
         - linux/arm64
         - linux/amd64
