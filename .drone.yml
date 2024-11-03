@@ -39,4 +39,4 @@ steps:
         - linux/arm64
         - linux/amd64
 
-# TODO - automated update of Helm Chart/Deployment Repo
+# TODO - automated update of deployment
