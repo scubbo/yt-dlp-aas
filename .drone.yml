@@ -1,0 +1,43 @@
+kind: pipeline
+name: build-and-deploy
+type: docker
+
+platform:
+  os: linux
+  arch: arm64
+
+
+steps:
+  - name: docker-build-and-push
+    image: thegeeklab/drone-docker-buildx # Absurd that this isn't offered as first-party!
+    privileged: true
+    settings:
+      # Consider testing with this if the cache-to arguments don't help!
+      # args:
+      #   - BUILDKIT_INLINE_CACHE=1
+      cache_from:
+        - "gitea.scubbo.org/${DRONE_REPO}:${DRONE_BRANCH}"
+      cache_to:
+        # https://docs.docker.com/build/cache/backends/registry/
+        # `mode=max` necessary in order to cache intermediate stages
+        #
+        # https://github.com/go-gitea/gitea/issues/28973#issuecomment-1961859655
+        # Some parameters are necessary in order to make the push to gitea succeed
+        #
+        # Another reference:
+        # https://github.com/thegeeklab/drone-docker-buildx/issues/47
+        - "type=registry,ref=gitea.scubbo.org/${DRONE_REPO}:${DRONE_BRANCH},mode=max,image-manifest=true,oci-mediatypes=true"
+      registry: gitea.scubbo.org
+      username: scubbo
+      password:
+        from_secret: gitea_password
+      repo: gitea.scubbo.org/${DRONE_REPO}
+      tags:
+        - ${DRONE_BRANCH}
+        - ${DRONE_COMMIT_SHA:0:10}
+      target: prod
+      platforms:
+        - linux/arm64
+        - linux/amd64
+
+# TODO - automated update of Helm Chart/Deployment Repo
