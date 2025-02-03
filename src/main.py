@@ -4,7 +4,7 @@ import os
 import socketserver
 
 from functools import partial
-from handler import Handler
+from src.handler import Handler
 from multiprocessing import Pool
 
 PORT = int(os.environ.get('PORT', '8000'))

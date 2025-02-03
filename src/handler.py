@@ -69,7 +69,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-        content = 'ERROR: Only HEAD requests are permitted\n'.encode('utf-8')
+        content = 'ERROR: Only POST requests are permitted\n'.encode('utf-8')
         self.send_header("Content-type", 'application/json')
         self.send_header('Content-Length', len(content))
         self.end_headers()

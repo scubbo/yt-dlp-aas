@@ -1,0 +1,46 @@
+services:
+  base: &base
+    tty: true
+    stdin_open: true
+    # Necessary because compose does not permit a service to lack a build
+    build:
+      context: .
+      target: deps
+    entrypoint: python
+    volumes:
+      - .:/usr/src/app:delegated
+
+  app:
+    build:
+      context: .
+      target: app
+    environment:
+      - DOWNLOAD_DIR=/download
+    ports:
+      - "8000:8000"
+    volumes:
+       - ./download_dir:/download
+
+  test-base: &test-base
+    <<: *base
+    build:
+      context: .
+      target: test
+
+  test:
+    <<: *test-base
+    command: ["-m", "pytest", "--ignore=integ-tests", "."]
+
+  test-with-output:
+    <<: *test-base
+    command: ["-m", "pytest", "-rP", "--ignore=integ-tests", "."]
+
+  test-integ:
+    <<: *test-base
+    depends_on:
+      # TODO - should really have a healthcheck here to avoid race-conditions. "Up" doesn't actually mean "Up and accepting requests"
+      - app
+    command: ["-m", "pytest", "integ-tests" ]
+    volumes:
+       - ./download_dir:/download
+       - .:/usr/src/app:delegated # Have to re-specify this because the specification above overrides, rather than appending
