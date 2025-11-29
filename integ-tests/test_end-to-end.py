@@ -1,15 +1,33 @@
+import os
 import pathlib
-import requests
+import socket
 import time
 
+import pytest
+import requests
+
+
+def _can_reach_app_host(hostname: str) -> bool:
+    try:
+        socket.gethostbyname(hostname)
+    except socket.gaierror:
+        return False
+    return True
+
 def test_download():
+    app_host = os.environ.get('APP_HOST', 'app')
+    download_path = pathlib.Path(os.environ.get('DOWNLOAD_DIR', '/download'))
+    if not _can_reach_app_host(app_host):
+        pytest.skip("App host is not reachable outside the compose harness")
+    if not download_path.exists():
+        pytest.skip("Download directory is not available")
+
     target_file_name = "A Beginner's Guide to the EICAR Test File [bTThnbwxN5g].m4a"
-    download_path = pathlib.Path('/download')
     url = 'https://www.youtube.com/watch?v=bTThnbwxN5g'
 
     try:
         # `app` is injected as a DNS name by the Docker Compose harness
-        response = requests.post('http://app:8000/download', json={
+        response = requests.post(f'http://{app_host}:8000/download', json={
             'url': url
         })
         assert response.status_code == 202, f"Non-202 response: {response.status_code}. Body: {response.json()}"
