@@ -2,7 +2,8 @@ name: Build and Publish Image
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
     tags: ["v*"]
   workflow_dispatch:
 
@@ -44,6 +45,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
+          target: app
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
