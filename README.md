@@ -1,4 +1,4 @@
-This package puts [yt-dlp](https://github.com/yt-dlp/yt-dlp) behind an HTTP-callable server.
+This package puts [yt-dlp](https://github.com/yt-dlp/yt-dlp) behind an HTTP-callable server, with a simple web UI at `/`.
 
 **Motivation:** I had a little snippet of bash that I could run on one of my [`*arr` Pods](https://wiki.servarr.com/) to install the `yt-dlp` CLI tool and then use it to download the audio of a video at a given URL. That _worked_, but was awkward - especially having to reinstall the tool any time a Pod was reinitialized. With this setup, I can deploy a light image alongside the Arr Pods that can be invoked over HTTP to download whatever URL I'm interested in, without having to do a `kubectl exec` to shell into the existing pods.
 
@@ -19,3 +19,5 @@ Environment variables:
 Request payload:
 * `url` (required) - video URL to download
 * `filename` (optional) - desired output filename (e.g. `song.m4a`); defaults to yt-dlp's inferred name
+
+The API only accepts YouTube URLs over http(s) (`youtube.com`, `www.youtube.com`, or `youtu.be`).

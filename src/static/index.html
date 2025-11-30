@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>yt-dlp-aas</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 640px; }
+    label { display: block; margin-top: 1rem; }
+    input { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
+    button { margin-top: 1rem; padding: 0.6rem 1rem; }
+    #status { margin-top: 1rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>yt-dlp-aas</h1>
+  <p>Request an audio download from YouTube.</p>
+  <form id="download-form">
+    <label>
+      YouTube URL (required)
+      <input type="url" id="url" name="url" required placeholder="https://www.youtube.com/watch?v=..." />
+    </label>
+    <label>
+      Filename (optional)
+      <input type="text" id="filename" name="filename" placeholder="custom-name.m4a" />
+    </label>
+    <button type="submit">Submit</button>
+  </form>
+  <div id="status"></div>
+  <script>
+    const form = document.getElementById('download-form');
+    const statusEl = document.getElementById('status');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      statusEl.textContent = 'Submitting...';
+      const url = document.getElementById('url').value.trim();
+      const filename = document.getElementById('filename').value.trim();
+      try {
+        const response = await fetch('/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, filename: filename || undefined })
+        });
+        if (response.ok) {
+          statusEl.textContent = 'Request accepted. Download is in progress.';
+          statusEl.style.color = 'green';
+        } else {
+          const text = await response.text();
+          statusEl.textContent = `Request failed: ${response.status} ${text}`;
+          statusEl.style.color = 'red';
+        }
+      } catch (err) {
+        statusEl.textContent = `Request failed: ${err}`;
+        statusEl.style.color = 'red';
+      }
+    });
+  </script>
+</body>
+</html>

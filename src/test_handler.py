@@ -3,7 +3,7 @@ import pathlib
 import tempfile
 from unittest.mock import patch
 
-from src.handler import download
+from src.handler import download, is_valid_youtube_url
 
 def test_download():
     video_url = "https://www.youtube.com/watch?v=bTThnbwxN5g"
@@ -41,3 +41,11 @@ def test_download_with_filename_override():
         # Ensure the file exists with the requested name
         download_dir = pathlib.Path(tmpdirname)
         assert any(p.name == expected_filename for p in download_dir.iterdir())
+
+
+def test_is_valid_youtube_url():
+    assert is_valid_youtube_url("https://www.youtube.com/watch?v=abc")
+    assert is_valid_youtube_url("http://youtube.com/watch?v=abc")
+    assert is_valid_youtube_url("https://youtu.be/abc")
+    assert not is_valid_youtube_url("https://www.example.com/watch?v=abc")
+    assert not is_valid_youtube_url("ftp://www.youtube.com/watch?v=abc")
