@@ -21,3 +21,12 @@ Request payload:
 * `filename` (optional) - desired output filename (e.g. `song.m4a`); defaults to yt-dlp's inferred name
 
 The API only accepts YouTube URLs over http(s) (`youtube.com`, `www.youtube.com`, or `youtu.be`).
+
+OpenAPI spec available at `/openapi.json`.
+
+# Updating the OpenAPI spec
+The spec is checked into `src/static/openapi.json`. If you change the API shape, update that file (manually or using your preferred OpenAPI editor) and keep the version in sync.
+
+Suggested workflow:
+- Edit `src/static/openapi.json` to reflect the new request/response contract for `/download` (update required fields, status codes, descriptions, etc).
+- Validate the JSON and contract alignment with `pytest src/test_handler.py::test_openapi_spec_is_valid_json src/test_handler.py::test_openapi_spec_matches_handler_contract`.

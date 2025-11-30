@@ -98,8 +98,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         # No need for a full webserver here!
+        static_dir = os.path.join(os.path.dirname(__file__), "static")
         if self.path in ("/", "/index.html"):
-            static_dir = os.path.join(os.path.dirname(__file__), "static")
             index_path = os.path.join(static_dir, "index.html")
             try:
                 with open(index_path, "rb") as f:
@@ -112,6 +112,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except FileNotFoundError:
                 self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
                 content = "UI is missing".encode("utf-8")
+                self.send_header("Content-type", "text/plain")
+                self.send_header("Content-Length", len(content))
+                self.end_headers()
+                self.wfile.write(content)
+        elif self.path == "/openapi.json":
+            spec_path = os.path.join(static_dir, "openapi.json")
+            try:
+                with open(spec_path, "rb") as f:
+                    content = f.read()
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-type", "application/json")
+                self.send_header("Content-Length", len(content))
+                self.end_headers()
+                self.wfile.write(content)
+            except FileNotFoundError:
+                self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+                content = "OpenAPI spec is missing".encode("utf-8")
                 self.send_header("Content-type", "text/plain")
                 self.send_header("Content-Length", len(content))
                 self.end_headers()

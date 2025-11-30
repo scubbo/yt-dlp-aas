@@ -1,6 +1,7 @@
 import os
 import pathlib
 import tempfile
+import json
 from unittest.mock import patch
 
 from src.handler import download, is_valid_youtube_url
@@ -49,3 +50,27 @@ def test_is_valid_youtube_url():
     assert is_valid_youtube_url("https://youtu.be/abc")
     assert not is_valid_youtube_url("https://www.example.com/watch?v=abc")
     assert not is_valid_youtube_url("ftp://www.youtube.com/watch?v=abc")
+
+
+def test_openapi_spec_is_valid_json():
+    spec_path = pathlib.Path(__file__).parent / "static" / "openapi.json"
+    with spec_path.open() as f:
+        data = json.load(f)
+    assert data["openapi"].startswith("3.")
+    assert "/download" in data["paths"]
+
+
+def test_openapi_spec_matches_handler_contract():
+    spec_path = pathlib.Path(__file__).parent / "static" / "openapi.json"
+    with spec_path.open() as f:
+        data = json.load(f)
+
+    download_op = data["paths"]["/download"]["post"]
+    req = download_op["requestBody"]["content"]["application/json"]["schema"]
+    # Resolve the ref for the schema we use in the handler
+    schema = data["components"]["schemas"]["DownloadRequest"] if "$ref" in req else req
+
+    assert download_op["responses"].keys() >= {"202", "400", "500"}
+    assert schema["required"] == ["url"]
+    assert "filename" in schema["properties"]
+    assert schema["properties"]["url"]["description"].startswith("YouTube URL")
