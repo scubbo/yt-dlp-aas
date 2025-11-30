@@ -6,7 +6,7 @@ import http.server
 from yt_dlp import YoutubeDL
 
 # https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#extract-audio
-def download(url):
+def download(url, filename=None):
     ydl_opts = {
         'format': 'm4a/bestaudio/best',
         'paths': {
@@ -17,6 +17,8 @@ def download(url):
             'preferredcodec': 'm4a'
         }]
     }
+    if filename:
+        ydl_opts['outtmpl'] = {'default': filename}
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download(url)
 
@@ -41,6 +43,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             data_string = self.rfile.read(int(content_length))
             body = json.loads(data_string) # TODO - better error-handling here
             url = body.get('url')
+            filename = body.get('filename')
             if not url:
                 self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
                 content = "Looks like you forgot to send a `url` parameter".encode('utf-8')
@@ -56,7 +59,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Length', len(content))
             self.end_headers()
             # TODO - check for success of kicking-off the thread
-            self.pool.apply_async(download, (url,))
+            self.pool.apply_async(download, (url,), {'filename': filename})
             self.wfile.write(content)
         except Exception as e:
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)

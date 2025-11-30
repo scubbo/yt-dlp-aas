@@ -15,3 +15,7 @@ There are _tons_ of improvements that could be made to this, such as:
 Environment variables:
 * `DOWNLOAD_DIR` sets the directory into-which to download files (defaults to `.`)
 * `PORT` sets the port to listen on (default to `8000`)
+
+Request payload:
+* `url` (required) - video URL to download
+* `filename` (optional) - desired output filename (e.g. `song.m4a`); defaults to yt-dlp's inferred name
