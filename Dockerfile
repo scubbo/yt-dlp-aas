@@ -3,9 +3,9 @@ FROM python:3.13 AS deps
 
 WORKDIR /usr/src/app
 
-COPY dev-requirements.txt ./
+COPY requirements.txt dev-requirements.txt ./
 RUN pip install --no-cache-dir -r dev-requirements.txt
-RUN rm dev-requirements.txt
+RUN rm dev-requirements.txt requirements.txt
 
 #=======================================================
 
