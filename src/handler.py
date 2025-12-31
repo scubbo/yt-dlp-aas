@@ -33,10 +33,10 @@ def download(url, filename=None):
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'm4a'
-        }]
+        }],
+        'noplaylist': True,
+        'outtmpl': {'default': filename if filename else '%(title)s [%(id)s].%(ext)s'}
     }
-    if filename:
-        ydl_opts['outtmpl'] = {'default': filename}
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download(url)
 
