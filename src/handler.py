@@ -22,23 +22,23 @@ def is_valid_youtube_url(url: str) -> bool:
 
 
 # https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#extract-audio
-def download(url, filename=None):
+def download(url, filename=None, cookies=None):
     if not is_valid_youtube_url(url):
         raise ValueError("URL must be a YouTube http(s) URL")
     ydl_opts = {
-        'format': 'm4a/bestaudio/best',
-        'paths': {
-            'home': os.environ.get('DOWNLOAD_DIR', '.')
-        },
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'm4a'
-        }],
-        'noplaylist': True,
-        'outtmpl': {'default': filename if filename else '%(title)s [%(id)s].%(ext)s'}
+        "format": "m4a/bestaudio/best",
+        "paths": {"home": os.environ.get("DOWNLOAD_DIR", ".")},
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "m4a"}],
+        "noplaylist": True,
+        "outtmpl": {"default": filename if filename else "%(title)s [%(id)s].%(ext)s"},
     }
+
+    if cookies:
+        ydl_opts["http_headers"] = {"Cookie": cookies}
+
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download(url)
+
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, pool, *args, **kwargs):
@@ -46,53 +46,71 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # https://stackoverflow.com/a/52046062/1040915
         super().__init__(*args, **kwargs)
 
+    def _send_cors_headers(self):
+        """Send CORS headers for cross-origin requests from youtube.com."""
+        self.send_header("Access-Control-Allow-Origin", "https://www.youtube.com")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+    def do_OPTIONS(self):
+        """Handle CORS preflight requests."""
+        self.send_response(HTTPStatus.OK)
+        self._send_cors_headers()
+        self.send_header("Content-Length", 0)
+        self.end_headers()
+
     def do_POST(self):
         try:
-            content_length = self.headers['Content-Length']
+            content_length = self.headers["Content-Length"]
             if not content_length:
                 self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-                content = "Looks like you forgot to send a body".encode('utf-8')
-                self.send_header("Content-type", 'application/json')
-                self.send_header('Content-Length', len(content))
+                content = "Looks like you forgot to send a body".encode("utf-8")
+                self.send_header("Content-type", "application/json")
+                self.send_header("Content-Length", len(content))
                 self.end_headers()
                 self.wfile.write(content)
                 return
 
             data_string = self.rfile.read(int(content_length))
-            body = json.loads(data_string) # TODO - better error-handling here
-            url = body.get('url')
-            filename = body.get('filename')
+            body = json.loads(data_string)  # TODO - better error-handling here
+            url = body.get("url")
+            filename = body.get("filename")
+            cookies = body.get("cookies")
             if not url:
                 self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-                content = "Looks like you forgot to send a `url` parameter".encode('utf-8')
-                self.send_header("Content-type", 'application/json')
-                self.send_header('Content-Length', len(content))
+                content = "Looks like you forgot to send a `url` parameter".encode(
+                    "utf-8"
+                )
+                self.send_header("Content-type", "application/json")
+                self.send_header("Content-Length", len(content))
                 self.end_headers()
                 self.wfile.write(content)
                 return
             if not is_valid_youtube_url(url):
                 self.send_response(HTTPStatus.BAD_REQUEST)
-                content = "Invalid URL - only YouTube URLs with http(s) scheme are allowed".encode('utf-8')
-                self.send_header("Content-type", 'application/json')
-                self.send_header('Content-Length', len(content))
+                content = "Invalid URL - only YouTube URLs with http(s) scheme are allowed".encode(
+                    "utf-8"
+                )
+                self.send_header("Content-type", "application/json")
+                self.send_header("Content-Length", len(content))
                 self.end_headers()
                 self.wfile.write(content)
                 return
 
             self.send_response(HTTPStatus.ACCEPTED)
-            content = f'Accepted download request for {url}\n'.encode('utf-8')
-            self.send_header("Content-type", 'application/json')
-            self.send_header('Content-Length', len(content))
+            content = f"Accepted download request for {url}\n".encode("utf-8")
+            self.send_header("Content-type", "application/json")
+            self.send_header("Content-Length", len(content))
             self.end_headers()
             # TODO - check for success of kicking-off the thread
-            self.pool.apply_async(download, (url,), {'filename': filename})
+            self.pool.apply_async(download, (url,), {"filename": filename, "cookies": cookies})
             self.wfile.write(content)
         except Exception as e:
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-            content = str(e).encode('utf-8')
-            print(e) # TODO - better logging!
-            self.send_header("Content-type", 'application/json')
-            self.send_header('Content-Length', len(content))
+            content = str(e).encode("utf-8")
+            print(e)  # TODO - better logging!
+            self.send_header("Content-type", "application/json")
+            self.send_header("Content-Length", len(content))
             self.end_headers()
             self.wfile.write(content)
 
@@ -135,8 +153,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(content)
         else:
             self.send_response(HTTPStatus.NOT_FOUND)
-            content = "Not found".encode('utf-8')
-            self.send_header("Content-type", 'text/plain')
-            self.send_header('Content-Length', len(content))
+            content = "Not found".encode("utf-8")
+            self.send_header("Content-type", "text/plain")
+            self.send_header("Content-Length", len(content))
             self.end_headers()
             self.wfile.write(content)
