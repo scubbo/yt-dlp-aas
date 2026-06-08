@@ -156,6 +156,9 @@ def test_post_with_cookies():
     # Call POST method
     handler.do_POST()
 
+    # Verify CORS headers are present on the response
+    handler.send_header.assert_any_call("Access-Control-Allow-Origin", "https://www.youtube.com")
+
     # Verify download was called with cookies
     handler.pool.apply_async.assert_called_once()
     args, kwargs = handler.pool.apply_async.call_args

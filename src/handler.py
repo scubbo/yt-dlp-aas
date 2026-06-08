@@ -64,6 +64,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             content_length = self.headers["Content-Length"]
             if not content_length:
                 self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+                self._send_cors_headers()
                 content = "Looks like you forgot to send a body".encode("utf-8")
                 self.send_header("Content-type", "application/json")
                 self.send_header("Content-Length", len(content))
@@ -78,6 +79,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             cookies = body.get("cookies")
             if not url:
                 self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+                self._send_cors_headers()
                 content = "Looks like you forgot to send a `url` parameter".encode(
                     "utf-8"
                 )
@@ -88,6 +90,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             if not is_valid_youtube_url(url):
                 self.send_response(HTTPStatus.BAD_REQUEST)
+                self._send_cors_headers()
                 content = "Invalid URL - only YouTube URLs with http(s) scheme are allowed".encode(
                     "utf-8"
                 )
@@ -98,6 +101,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
 
             self.send_response(HTTPStatus.ACCEPTED)
+            self._send_cors_headers()
             content = f"Accepted download request for {url}\n".encode("utf-8")
             self.send_header("Content-type", "application/json")
             self.send_header("Content-Length", len(content))
@@ -107,6 +111,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(content)
         except Exception as e:
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+            self._send_cors_headers()
             content = str(e).encode("utf-8")
             print(e)  # TODO - better logging!
             self.send_header("Content-type", "application/json")
