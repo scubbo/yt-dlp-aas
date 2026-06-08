@@ -31,6 +31,7 @@ def download(url, filename=None, cookies=None):
         "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "m4a"}],
         "noplaylist": True,
         "outtmpl": {"default": filename if filename else "%(title)s [%(id)s].%(ext)s"},
+        "remote_components": "ejs:github",
     }
 
     if cookies:
