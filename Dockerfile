@@ -32,8 +32,5 @@ CMD ["src/main.py"]
 
 FROM deps AS test
 
-COPY dev-requirements.txt ./
-RUN pip install --no-cache-dir -r dev-requirements.txt
-
 COPY . .
 # No `CMD`, because there are plenty of potential test commands, no single sensible default.
