@@ -7,6 +7,12 @@ from unittest.mock import patch, MagicMock
 from src.handler import download, is_valid_youtube_url, Handler
 
 
+def test_yt_dlp_version_supports_youtube_downloads():
+    requirements = pathlib.Path(__file__).parent.parent / "requirements.txt"
+
+    assert requirements.read_text().strip() == "yt-dlp==2026.8.19"
+
+
 def test_download():
     video_url = "https://www.youtube.com/watch?v=bTThnbwxN5g"
     expected_filename = "A Beginner's Guide to the EICAR Test File [bTThnbwxN5g].m4a"
