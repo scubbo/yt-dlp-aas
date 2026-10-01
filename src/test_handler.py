@@ -4,7 +4,7 @@ import tempfile
 import json
 from unittest.mock import patch, MagicMock
 
-from src.handler import download, is_valid_youtube_url, Handler
+from src.handler import download, download_options, is_valid_youtube_url, Handler
 
 
 def test_yt_dlp_version_supports_youtube_downloads():
@@ -53,6 +53,10 @@ def test_download_with_filename_override():
         # Ensure the file exists with the requested name
         download_dir = pathlib.Path(tmpdirname)
         assert any(p.name == expected_filename for p in download_dir.iterdir())
+
+
+def test_download_retries_network_errors():
+    assert download_options()["retries"] == 3
 
 
 def test_is_valid_youtube_url():

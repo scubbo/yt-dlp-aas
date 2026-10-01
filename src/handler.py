@@ -9,6 +9,18 @@ from yt_dlp import YoutubeDL
 ALLOWED_YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "youtu.be"}
 
 
+def download_options(filename=None):
+    return {
+        "format": "m4a/bestaudio/best",
+        "paths": {"home": os.environ.get("DOWNLOAD_DIR", ".")},
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "m4a"}],
+        "noplaylist": True,
+        "retries": 3,
+        "outtmpl": {"default": filename if filename else "%(title)s [%(id)s].%(ext)s"},
+        "remote_components": ["ejs:github"],
+    }
+
+
 def is_valid_youtube_url(url: str) -> bool:
     """Check for http(s) scheme and YouTube host."""
     try:
@@ -25,14 +37,7 @@ def is_valid_youtube_url(url: str) -> bool:
 def download(url, filename=None, cookies=None):
     if not is_valid_youtube_url(url):
         raise ValueError("URL must be a YouTube http(s) URL")
-    ydl_opts = {
-        "format": "m4a/bestaudio/best",
-        "paths": {"home": os.environ.get("DOWNLOAD_DIR", ".")},
-        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "m4a"}],
-        "noplaylist": True,
-        "outtmpl": {"default": filename if filename else "%(title)s [%(id)s].%(ext)s"},
-        "remote_components": ["ejs:github"],
-    }
+    ydl_opts = download_options(filename)
 
     if cookies:
         ydl_opts["http_headers"] = {"Cookie": cookies}
